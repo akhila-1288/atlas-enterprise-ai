@@ -24,7 +24,7 @@ def index():
         info = pc.describe_index(name)
     except Exception as exc:
         # Only create on an actual 404; never hide auth/network failures.
-        if getattr(exc, 'status', None) != 404:
+        if _http_status(exc) != 404:
             raise
         log.info('Creating Pinecone index %s (dimension=%d, metric=cosine)', name, s.embed_dim)
         try:
@@ -32,7 +32,7 @@ def index():
                 spec=ServerlessSpec(cloud=s.pinecone_cloud, region=s.pinecone_region))
         except Exception as create_exc:
             # Another process may have created the index concurrently.
-            if getattr(create_exc, 'status', None) != 409:
+            if _http_status(create_exc) != 409:
                 raise
         info = pc.describe_index(name)
     if int(info.dimension) != s.embed_dim:
@@ -67,3 +67,12 @@ def search(tenant, vector, groups, owner, limit=5):
 def delete_document(tenant, ids):
     if ids:
         index().delete(ids=ids, namespace=namespace(tenant))
+
+def _http_status(exc):
+    status = getattr(exc, 'status', None)
+    if status is None:
+        status = getattr(exc, 'status_code', None)
+    if status is None:
+        http_resp = getattr(exc, 'http_resp', None)
+        status = getattr(http_resp, 'status', None)
+    return status

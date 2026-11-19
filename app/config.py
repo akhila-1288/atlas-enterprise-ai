@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     pinecone_api_key:str=''
     pinecone_index_name:str=''
     pinecone_cloud:str='aws'
-    pinecone_region:str=''
+    pinecone_region:str='us-east-1'
     pinecone_ready_timeout:int=180
     min_relevance:float=0.25
     hitl_enabled:bool=True
